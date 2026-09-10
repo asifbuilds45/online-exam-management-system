@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Online Exam Management System</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="login-page">
+  <div class="login-card">
+    <div class="brand">OEMS</div>
+    <h1>Online Exam Management System</h1>
+    <p class="muted">Sign in to continue</p>
+    <form onsubmit="login(event)">
+      <label>Email</label>
+      <input id="email" type="email" placeholder="Enter email" required>
+      <label>Password</label>
+      <input id="password" type="password" placeholder="Enter password" required>
+      <label>Login as</label>
+      <select id="role">
+        <option value="student">Student</option>
+        <option value="faculty">Faculty</option>
+        <option value="admin">Admin</option>
+      </select>
+      <button class="primary full" type="submit">Sign In</button>
+    </form>
+    <p class="demo">UI Prototype • Any email/password can be used</p>
+  </div>
+</div>
+<script src="js/script.js"></script>
+</body>
+</html>

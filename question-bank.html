@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Question Bank</title><link rel="stylesheet" href="css/style.css"></head>
+<body><div class="app"><aside class="sidebar"><div class="logo">OEMS</div><div class="role">FACULTY</div><a href="faculty-dashboard.html">Dashboard</a><a class="active" href="question-bank.html">Question Bank</a><a href="add-question.html">Add Question</a><a href="create-exam.html">Create Exam</a><a href="scheduled-exams.html">Scheduled Exams</a><a href="result.html">Results</a><a href="index.html">Logout</a></aside>
+<main class="main"><header><div><h2>Question Bank</h2><p class="muted">Create and manage examination questions</p></div><a class="primary" href="add-question.html">＋ Add Question</a></header>
+<div class="toolbar"><input id="search" onkeyup="filterQuestions()" placeholder="Search questions..."><select id="difficulty" onchange="filterQuestions()"><option value="">All Difficulty</option><option>Easy</option><option>Medium</option><option>Hard</option></select><select><option>All Subjects</option><option>DBMS</option><option>OS</option><option>CN</option></select></div>
+<div class="panel"><table id="questionTable"><tr><th>#</th><th>Question</th><th>Subject</th><th>Difficulty</th><th>Marks</th><th>Action</th></tr>
+<tr><td>Q001</td><td>What is a primary key?</td><td>DBMS</td><td><span class="badge green">Easy</span></td><td>2</td><td><button class="link">Edit</button> <button class="link danger">Delete</button></td></tr>
+<tr><td>Q002</td><td>Explain process scheduling.</td><td>OS</td><td><span class="badge yellow">Medium</span></td><td>5</td><td><button class="link">Edit</button> <button class="link danger">Delete</button></td></tr>
+<tr><td>Q003</td><td>What is TCP three-way handshake?</td><td>CN</td><td><span class="badge red">Hard</span></td><td>5</td><td><button class="link">Edit</button> <button class="link danger">Delete</button></td></tr>
+<tr><td>Q004</td><td>What is normalization?</td><td>DBMS</td><td><span class="badge green">Easy</span></td><td>2</td><td><button class="link">Edit</button> <button class="link danger">Delete</button></td></tr>
+</table></div></main></div>
+<script src="js/script.js"></script></body></html>

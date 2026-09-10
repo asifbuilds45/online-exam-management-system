@@ -1,0 +1,4 @@
+function login(e){e.preventDefault();const role=document.getElementById('role').value;if(role==='faculty')location.href='faculty-dashboard.html';else if(role==='student')location.href='student-dashboard.html';else location.href='admin-dashboard.html';}
+function saveQuestion(e){e.preventDefault();alert('Question saved successfully!');location.href='question-bank.html';}
+function createExam(e){e.preventDefault();alert('Exam created and published successfully!');location.href='scheduled-exams.html';}
+function filterQuestions(){const text=document.getElementById('search').value.toLowerCase();const diff=document.getElementById('difficulty').value;const rows=document.querySelectorAll('#questionTable tr');rows.forEach((r,i)=>{if(i===0)return;const content=r.innerText.toLowerCase();const difficulty=r.cells[3].innerText.trim();r.style.display=(content.includes(text)&&(!diff||difficulty.includes(diff)))?'':'none';});}
