@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const questionController_js_1 = require("../controllers/questionController.js");
+const authMiddleware_js_1 = require("../middleware/authMiddleware.js");
+const router = (0, express_1.Router)();
+router.get('/', authMiddleware_js_1.requireAuth, questionController_js_1.getQuestions);
+router.get('/:id', authMiddleware_js_1.requireAuth, questionController_js_1.getQuestionById);
+router.post('/', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), questionController_js_1.createQuestion);
+router.post('/import-csv', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), questionController_js_1.importCSV);
+router.put('/:id', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), questionController_js_1.updateQuestion);
+router.delete('/:id', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), questionController_js_1.deleteQuestion);
+exports.default = router;

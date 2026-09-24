@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const examController_js_1 = require("../controllers/examController.js");
+const authMiddleware_js_1 = require("../middleware/authMiddleware.js");
+const router = (0, express_1.Router)();
+router.get('/', authMiddleware_js_1.requireAuth, examController_js_1.getExams);
+router.get('/:id', authMiddleware_js_1.requireAuth, examController_js_1.getExamById);
+router.post('/', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), examController_js_1.createExam);
+router.post('/:id/publish', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), examController_js_1.publishExam);
+router.post('/:id/start', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('student'), examController_js_1.startExam);
+exports.default = router;

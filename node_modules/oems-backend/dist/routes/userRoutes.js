@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const userController_js_1 = require("../controllers/userController.js");
+const authMiddleware_js_1 = require("../middleware/authMiddleware.js");
+const router = (0, express_1.Router)();
+router.get('/', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('admin', 'faculty'), userController_js_1.getUsers);
+router.post('/', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('admin'), userController_js_1.createUser);
+router.put('/:id', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('admin'), userController_js_1.updateUser);
+router.patch('/:id/toggle-status', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('admin'), userController_js_1.deactivateUser);
+exports.default = router;

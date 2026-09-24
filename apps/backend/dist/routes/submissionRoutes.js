@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const submissionController_js_1 = require("../controllers/submissionController.js");
+const authMiddleware_js_1 = require("../middleware/authMiddleware.js");
+const router = (0, express_1.Router)();
+router.post('/autosave', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('student'), submissionController_js_1.autosaveAnswer);
+router.post('/submit', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('student'), submissionController_js_1.submitExam);
+router.get('/exam/:examId', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), submissionController_js_1.getSubmissionsForExam);
+router.post('/grade/:submissionId', authMiddleware_js_1.requireAuth, (0, authMiddleware_js_1.requireRole)('faculty', 'admin'), submissionController_js_1.gradeDescriptiveSubmission);
+exports.default = router;

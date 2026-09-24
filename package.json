@@ -1,0 +1,22 @@
+{
+  "name": "online-exam-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade Full-Stack Online Exam Management System (React + TypeScript + Express + Supabase)",
+  "workspaces": [
+    "apps/frontend",
+    "apps/backend"
+  ],
+  "scripts": {
+    "start": "concurrently -k -p \"[{name}]\" -c \"blue.bold,green.bold\" \"npm run start --workspace=apps/backend\" \"npm run preview --workspace=apps/frontend\"",
+    "dev": "concurrently -k -p \"[{name}]\" -c \"blue.bold,green.bold\" \"npm run dev --workspace=apps/backend\" \"npm run dev --workspace=apps/frontend\"",
+    "build": "npm run build --workspace=apps/backend && npm run build --workspace=apps/frontend",
+    "build:backend": "npm run build --workspace=apps/backend",
+    "build:frontend": "npm run build --workspace=apps/frontend",
+    "dev:backend": "npm run dev --workspace=apps/backend",
+    "dev:frontend": "npm run dev --workspace=apps/frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
