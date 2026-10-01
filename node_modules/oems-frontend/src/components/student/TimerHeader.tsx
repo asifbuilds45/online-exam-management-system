@@ -3,14 +3,29 @@ import { Clock, AlertTriangle } from 'lucide-react';
 
 interface TimerHeaderProps {
   durationMinutes: number;
+  startedAt?: string;
   onTimeExpired: () => void;
 }
 
 export const TimerHeader: React.FC<TimerHeaderProps> = ({
   durationMinutes,
+  startedAt,
   onTimeExpired
 }) => {
-  const [secondsRemaining, setSecondsRemaining] = useState<number>(durationMinutes * 60);
+  const calculateSecondsRemaining = () => {
+    if (startedAt) {
+      const startedMs = new Date(startedAt).getTime();
+      const endMs = startedMs + durationMinutes * 60 * 1000;
+      return Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+    }
+    return durationMinutes * 60;
+  };
+
+  const [secondsRemaining, setSecondsRemaining] = useState<number>(calculateSecondsRemaining);
+
+  useEffect(() => {
+    setSecondsRemaining(calculateSecondsRemaining());
+  }, [startedAt, durationMinutes]);
 
   useEffect(() => {
     if (secondsRemaining <= 0) {
@@ -19,7 +34,14 @@ export const TimerHeader: React.FC<TimerHeaderProps> = ({
     }
 
     const timer = setInterval(() => {
-      setSecondsRemaining((prev) => prev - 1);
+      setSecondsRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          onTimeExpired();
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
 
     return () => clearInterval(timer);

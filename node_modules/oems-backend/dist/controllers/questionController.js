@@ -157,49 +157,81 @@ async function importCSV(req, res) {
         return res.status(400).json({ error: 'CSV text must contain header and at least 1 data row' });
     }
     let importedCount = 0;
+    const validationErrors = [];
     const now = new Date().toISOString();
-    // Simple CSV parser supporting format:
-    // Subject,Topic,Type,QuestionText,Difficulty,Marks,OptA,OptB,OptC,OptD,CorrectOpt
+    // CSV parser: Subject,Topic,Type,QuestionText,Difficulty,Marks,OptA,OptB,OptC,OptD,CorrectOpt
     for (let i = 1; i < lines.length; i++) {
+        const lineNumber = i + 1;
         const cols = lines[i].split(',').map((c) => c.trim().replace(/^"(.*)"$/, '$1'));
-        if (cols.length >= 6) {
-            const [subject, topic, type, text, difficulty, marks, optA, optB, optC, optD, correctOpt] = cols;
-            const qId = (0, uuid_1.v4)();
-            const qType = (type || 'mcq').toLowerCase() === 'descriptive' ? 'descriptive' : 'mcq';
-            const qDiff = ['easy', 'medium', 'hard'].includes((difficulty || '').toLowerCase())
-                ? difficulty.toLowerCase()
-                : 'medium';
-            const questionObj = {
-                id: qId,
-                created_by: req.user?.id || 'system',
-                subject: subject || 'General',
-                topic: topic || 'General',
-                question_type: qType,
-                question_text: text || 'Sample Question',
-                difficulty: qDiff,
-                default_marks: parseFloat(marks) || 2,
-                is_deleted: false,
-                created_at: now,
-                updated_at: now
-            };
-            mockDb_js_1.mockDb.questions.unshift(questionObj);
-            if (qType === 'mcq' && optA && optB) {
-                const optionsList = [optA, optB, optC, optD].filter(Boolean);
-                const correctLetter = (correctOpt || 'A').toUpperCase();
-                optionsList.forEach((optText, idx) => {
-                    const letter = String.fromCharCode(65 + idx);
-                    mockDb_js_1.mockDb.questionOptions.push({
-                        id: (0, uuid_1.v4)(),
-                        question_id: qId,
-                        option_text: optText,
-                        is_correct: letter === correctLetter,
-                        option_order: idx + 1
-                    });
-                });
-            }
-            importedCount++;
+        if (cols.length < 4) {
+            validationErrors.push(`Line ${lineNumber}: Insufficient columns. Minimum required: Subject, Topic, Type, QuestionText.`);
+            continue;
         }
+        const [subject, topic, type, text, difficulty, marks, optA, optB, optC, optD, correctOpt] = cols;
+        if (!text || text.length < 3) {
+            validationErrors.push(`Line ${lineNumber}: Question text must be at least 3 characters.`);
+            continue;
+        }
+        const cleanType = (type || 'mcq').toLowerCase();
+        if (cleanType !== 'mcq' && cleanType !== 'descriptive') {
+            validationErrors.push(`Line ${lineNumber}: Invalid question type '${type}'. Must be 'mcq' or 'descriptive'.`);
+            continue;
+        }
+        const cleanDiff = (difficulty || 'medium').toLowerCase();
+        if (!['easy', 'medium', 'hard'].includes(cleanDiff)) {
+            validationErrors.push(`Line ${lineNumber}: Invalid difficulty '${difficulty}'. Must be 'easy', 'medium', or 'hard'.`);
+            continue;
+        }
+        const parsedMarks = parseFloat(marks);
+        if (marks && (isNaN(parsedMarks) || parsedMarks <= 0)) {
+            validationErrors.push(`Line ${lineNumber}: Invalid marks '${marks}'. Must be a positive number.`);
+            continue;
+        }
+        if (cleanType === 'mcq' && (!optA || !optB)) {
+            validationErrors.push(`Line ${lineNumber}: MCQ questions require at least Option A and Option B.`);
+            continue;
+        }
+        const qId = (0, uuid_1.v4)();
+        const questionObj = {
+            id: qId,
+            created_by: req.user?.id || 'system',
+            subject: subject || 'General',
+            topic: topic || 'General',
+            question_type: cleanType,
+            question_text: text,
+            difficulty: cleanDiff,
+            default_marks: parsedMarks || 2,
+            is_deleted: false,
+            created_at: now,
+            updated_at: now
+        };
+        mockDb_js_1.mockDb.questions.unshift(questionObj);
+        if (cleanType === 'mcq' && optA && optB) {
+            const optionsList = [optA, optB, optC, optD].filter(Boolean);
+            const correctLetter = (correctOpt || 'A').toUpperCase();
+            optionsList.forEach((optText, idx) => {
+                const letter = String.fromCharCode(65 + idx);
+                mockDb_js_1.mockDb.questionOptions.push({
+                    id: (0, uuid_1.v4)(),
+                    question_id: qId,
+                    option_text: optText,
+                    is_correct: letter === correctLetter,
+                    option_order: idx + 1
+                });
+            });
+        }
+        importedCount++;
     }
-    mockDb_js_1.mockDb.logAudit('IMPORT_QUESTIONS_CSV', 'QUESTION', undefined, { count: importedCount }, req.user?.id, req.user?.email);
-    return res.json({ message: `Successfully imported ${importedCount} questions`, count: importedCount });
+    if (importedCount === 0 && validationErrors.length > 0) {
+        return res.status(400).json({
+            error: 'CSV validation failed. No valid rows were imported.',
+            validationErrors
+        });
+    }
+    mockDb_js_1.mockDb.logAudit('IMPORT_QUESTIONS_CSV', 'QUESTION', undefined, { count: importedCount, errorsCount: validationErrors.length }, req.user?.id, req.user?.email);
+    return res.json({
+        message: `Successfully imported ${importedCount} questions.${validationErrors.length > 0 ? ` Encountered ${validationErrors.length} bad row(s).` : ''}`,
+        count: importedCount,
+        validationErrors: validationErrors.length > 0 ? validationErrors : undefined
+    });
 }

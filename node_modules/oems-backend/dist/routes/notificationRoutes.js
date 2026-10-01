@@ -6,5 +6,6 @@ const authMiddleware_js_1 = require("../middleware/authMiddleware.js");
 const router = (0, express_1.Router)();
 router.get('/', authMiddleware_js_1.requireAuth, notificationController_js_1.getNotifications);
 router.patch('/:id/read', authMiddleware_js_1.requireAuth, notificationController_js_1.markNotificationRead);
+router.patch('/:id/toggle', authMiddleware_js_1.requireAuth, notificationController_js_1.toggleNotificationRead);
 router.patch('/read-all', authMiddleware_js_1.requireAuth, notificationController_js_1.markAllNotificationsRead);
 exports.default = router;

@@ -37,6 +37,17 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
     }
   };
 
+  const toggleSingleRead = async (id: string) => {
+    try {
+      await api.patch(`/notifications/${id}/toggle`);
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, is_read: !n.is_read } : n))
+      );
+    } catch (err) {
+      // silent
+    }
+  };
+
   return (
     <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
       <div>
@@ -80,10 +91,25 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle }) => {
                   notifications.map((n) => (
                     <div
                       key={n.id}
-                      className={`p-3 text-xs ${!n.is_read ? 'bg-blue-50/50 font-medium' : ''}`}
+                      className={`p-3 text-xs flex items-start justify-between gap-2 ${
+                        !n.is_read ? 'bg-blue-50/50 font-medium' : ''
+                      }`}
                     >
-                      <p className="font-semibold text-slate-800">{n.title}</p>
-                      <p className="text-slate-500 mt-0.5">{n.message}</p>
+                      <div>
+                        <p className="font-semibold text-slate-800">{n.title}</p>
+                        <p className="text-slate-500 mt-0.5">{n.message}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleSingleRead(n.id)}
+                        className={`text-[10px] px-2 py-0.5 rounded font-bold shrink-0 transition-colors ${
+                          n.is_read
+                            ? 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
+                        }`}
+                        title={n.is_read ? 'Mark as Unread' : 'Mark as Read'}
+                      >
+                        {n.is_read ? 'Unread' : 'Read'}
+                      </button>
                     </div>
                   ))
                 )}

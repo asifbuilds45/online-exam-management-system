@@ -202,11 +202,54 @@ export async function createExam(req: AuthRequest, res: Response) {
   return res.status(201).json(newExam);
 }
 
+export async function updateExam(req: AuthRequest, res: Response) {
+  const { id } = req.params;
+  const exam = mockDb.exams.find((e) => e.id === id);
+  if (!exam) {
+    return res.status(404).json({ error: 'Exam not found' });
+  }
+
+  const now = Date.now();
+  const startTimeMs = new Date(exam.start_time).getTime();
+  if (exam.status === 'published' && startTimeMs - now <= 15 * 60 * 1000) {
+    return res.status(400).json({
+      error: 'Edit Locked: Cannot modify exam settings within 15 minutes of start time or while published.'
+    });
+  }
+
+  const schema = z.object({
+    title: z.string().optional(),
+    subject: z.string().optional(),
+    description: z.string().optional(),
+    duration_minutes: z.number().positive().optional(),
+    total_marks: z.number().positive().optional(),
+    passing_marks: z.number().nonnegative().optional(),
+    negative_marking_rate: z.number().nonnegative().optional(),
+    start_time: z.string().optional(),
+    end_time: z.string().optional()
+  });
+
+  const body = schema.parse(req.body);
+  Object.assign(exam, body, { updated_at: new Date().toISOString() });
+
+  mockDb.logAudit('UPDATE_EXAM', 'EXAM', id, body, req.user?.id, req.user?.email);
+  return res.json({ message: 'Exam updated successfully', exam });
+}
+
 export async function publishExam(req: AuthRequest, res: Response) {
   const { id } = req.params;
   const exam = mockDb.exams.find((e) => e.id === id);
   if (!exam) {
     return res.status(404).json({ error: 'Exam not found' });
+  }
+
+  const now = Date.now();
+  const startTimeMs = new Date(exam.start_time).getTime();
+  // Edit-lock guard: prevent unpublishing if exam is within 15 minutes of start time or already active
+  if (exam.status === 'published' && startTimeMs - now <= 15 * 60 * 1000) {
+    return res.status(400).json({
+      error: 'Edit-Lock Active: Cannot unpublish exam when it is within 15 minutes of start time or already active.'
+    });
   }
 
   exam.status = exam.status === 'published' ? 'draft' : 'published';

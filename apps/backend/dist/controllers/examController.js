@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getExams = getExams;
 exports.getExamById = getExamById;
 exports.createExam = createExam;
+exports.updateExam = updateExam;
 exports.publishExam = publishExam;
 exports.startExam = startExam;
 const zod_1 = require("zod");
@@ -181,11 +182,48 @@ async function createExam(req, res) {
     mockDb_js_1.mockDb.logAudit('CREATE_EXAM', 'EXAM', examId, { title: body.title, subject: body.subject }, req.user?.id, req.user?.email);
     return res.status(201).json(newExam);
 }
+async function updateExam(req, res) {
+    const { id } = req.params;
+    const exam = mockDb_js_1.mockDb.exams.find((e) => e.id === id);
+    if (!exam) {
+        return res.status(404).json({ error: 'Exam not found' });
+    }
+    const now = Date.now();
+    const startTimeMs = new Date(exam.start_time).getTime();
+    if (exam.status === 'published' && startTimeMs - now <= 15 * 60 * 1000) {
+        return res.status(400).json({
+            error: 'Edit Locked: Cannot modify exam settings within 15 minutes of start time or while published.'
+        });
+    }
+    const schema = zod_1.z.object({
+        title: zod_1.z.string().optional(),
+        subject: zod_1.z.string().optional(),
+        description: zod_1.z.string().optional(),
+        duration_minutes: zod_1.z.number().positive().optional(),
+        total_marks: zod_1.z.number().positive().optional(),
+        passing_marks: zod_1.z.number().nonnegative().optional(),
+        negative_marking_rate: zod_1.z.number().nonnegative().optional(),
+        start_time: zod_1.z.string().optional(),
+        end_time: zod_1.z.string().optional()
+    });
+    const body = schema.parse(req.body);
+    Object.assign(exam, body, { updated_at: new Date().toISOString() });
+    mockDb_js_1.mockDb.logAudit('UPDATE_EXAM', 'EXAM', id, body, req.user?.id, req.user?.email);
+    return res.json({ message: 'Exam updated successfully', exam });
+}
 async function publishExam(req, res) {
     const { id } = req.params;
     const exam = mockDb_js_1.mockDb.exams.find((e) => e.id === id);
     if (!exam) {
         return res.status(404).json({ error: 'Exam not found' });
+    }
+    const now = Date.now();
+    const startTimeMs = new Date(exam.start_time).getTime();
+    // Edit-lock guard: prevent unpublishing if exam is within 15 minutes of start time or already active
+    if (exam.status === 'published' && startTimeMs - now <= 15 * 60 * 1000) {
+        return res.status(400).json({
+            error: 'Edit-Lock Active: Cannot unpublish exam when it is within 15 minutes of start time or already active.'
+        });
     }
     exam.status = exam.status === 'published' ? 'draft' : 'published';
     exam.updated_at = new Date().toISOString();

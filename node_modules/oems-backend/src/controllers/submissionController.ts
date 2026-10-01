@@ -25,6 +25,18 @@ export async function autosaveAnswer(req: AuthRequest, res: Response) {
     return res.status(403).json({ error: 'Exam submission is locked. Answers cannot be updated.' });
   }
 
+  // Server-side Exam Timing Enforcement
+  const exam = mockDb.exams.find((e) => e.id === submission.exam_id);
+  if (exam) {
+    const startedMs = new Date(submission.started_at).getTime();
+    const maxAllowedMs = exam.duration_minutes * 60 * 1000 + 30000; // 30s network grace period
+    if (Date.now() - startedMs > maxAllowedMs) {
+      submission.submitted_at = new Date().toISOString();
+      submission.auto_submitted = true;
+      return res.status(403).json({ error: 'Exam time window has expired. Submission is locked.' });
+    }
+  }
+
   let answer = mockDb.studentAnswers.find(
     (a) => a.submission_id === body.submission_id && a.question_id === body.question_id
   );

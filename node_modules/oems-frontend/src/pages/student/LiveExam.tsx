@@ -20,13 +20,22 @@ export const LiveExam: React.FC = () => {
   const navigate = useNavigate();
   const { showToast } = useNotification();
 
-  // Tab focus / Blur detection anti-cheat listener
+  // Tab focus / Blur & visibility change anti-cheat listener
   useEffect(() => {
     const handleBlur = () => {
-      showToast('warning', 'Security Alert', 'Leaving the exam window is recorded in audit logs.');
+      showToast('warning', 'Security Warning', 'Leaving or switching away from the exam window is flagged in audit logs.');
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        showToast('warning', 'Tab Switch Alert', 'Tab switching detected! Continued activity will be logged.');
+      }
     };
     window.addEventListener('blur', handleBlur);
-    return () => window.removeEventListener('blur', handleBlur);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [showToast]);
 
   // Load live exam session from backend
@@ -187,6 +196,7 @@ export const LiveExam: React.FC = () => {
 
           <TimerHeader
             durationMinutes={session.duration_minutes}
+            startedAt={session.started_at}
             onTimeExpired={() => handleSubmitExam(true)}
           />
         </div>

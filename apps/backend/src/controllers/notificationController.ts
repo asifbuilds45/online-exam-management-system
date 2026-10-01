@@ -21,6 +21,21 @@ export async function markNotificationRead(req: AuthRequest, res: Response) {
   return res.json(notif);
 }
 
+export async function toggleNotificationRead(req: AuthRequest, res: Response) {
+  const { id } = req.params;
+  const notif = mockDb.notifications.find((n) => n.id === id);
+  if (!notif) {
+    return res.status(404).json({ error: 'Notification not found' });
+  }
+
+  notif.is_read = !notif.is_read;
+  if (notif.is_read) {
+    notif.read_at = new Date().toISOString();
+  }
+
+  return res.json(notif);
+}
+
 export async function markAllNotificationsRead(req: AuthRequest, res: Response) {
   const userId = req.user?.id;
   mockDb.notifications

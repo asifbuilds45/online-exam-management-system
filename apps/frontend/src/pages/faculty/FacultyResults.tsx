@@ -74,9 +74,25 @@ export const FacultyResults: React.FC = () => {
     }
   };
 
-  const handleDownloadCSV = () => {
+  const handleDownloadCSV = async () => {
     if (!selectedExamId) return;
-    window.open(`/api/results/export-csv/${selectedExamId}`, '_blank');
+    try {
+      const res = await api.get(`/results/export-csv/${selectedExamId}`, {
+        responseType: 'blob'
+      });
+      const blob = new Blob([res.data], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `exam-results-${selectedExamId}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showToast('success', 'CSV Downloaded', 'Results CSV file downloaded successfully.');
+    } catch (err: any) {
+      showToast('error', 'Download Failed', err.response?.data?.error || 'CSV export error');
+    }
   };
 
   const handleGradeSubmit = async (e: React.FormEvent) => {
